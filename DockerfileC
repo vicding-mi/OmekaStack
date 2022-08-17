@@ -1,0 +1,46 @@
+FROM php:7.4-apache
+
+RUN a2enmod rewrite
+
+#ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get -qq update && apt-get -qq -y --no-install-recommends install \
+    curl \
+    unzip \
+    libmcrypt-dev \
+    libmemcached-dev \
+    imagemagick \
+    zlib1g-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libmcrypt-dev
+
+#RUN apt search libpng
+#RUN apt update && apt install libpng12-dev
+
+# install the PHP extensions we need
+RUN docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/
+RUN docker-php-ext-install -j$(nproc) iconv pdo pdo_mysql mysqli gd
+
+RUN pecl install mcrypt
+RUN docker-php-ext-enable mcrypt
+
+RUN curl -JLsk \
+    'https://github.com/omeka/Omeka/releases/download/v3.0.3/omeka-3.0.3.zip' \
+    -o /var/www/omeka-c.zip \
+&&  unzip -q /var/www/omeka-c.zip -d /var/www/ \
+&&  rm /var/www/omeka-c.zip \
+&&  rm -rf /var/www/html \
+&&  mv /var/www/omeka-3.0.3 /var/www/html \
+&&  chown -R www-data:www-data /var/www/html
+
+COPY ./db.ini /var/www/html/db.ini
+COPY ./imagemagick-policy.xml /etc/ImageMagick/policy.xml
+COPY ./.htaccessc /var/www/html/.htaccess
+COPY ./000-default.conf /etc/apache2/sites-enabled/000-default.conf
+
+VOLUME /var/www/html
+
+
+
+CMD ["apache2-foreground"]
