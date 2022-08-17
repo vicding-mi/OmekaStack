@@ -20,7 +20,7 @@ RUN apt-get -qq update && apt-get -qq -y --no-install-recommends install \
 
 # install the PHP extensions we need
 RUN docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/
-RUN docker-php-ext-install -j$(nproc) iconv pdo pdo_mysql mysqli gd
+RUN docker-php-ext-install -j$(nproc) iconv pdo pdo_mysql mysqli gd exif
 
 RUN pecl install mcrypt
 RUN docker-php-ext-enable mcrypt
@@ -40,7 +40,5 @@ COPY ./.htaccessc /var/www/html/.htaccess
 COPY ./000-default.conf /etc/apache2/sites-enabled/000-default.conf
 
 VOLUME /var/www/html
-
-
 
 CMD ["apache2-foreground"]
