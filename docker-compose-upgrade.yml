@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:5.7
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: omeka
+      MYSQL_DATABASE: omeka
+      MYSQL_USER: omeka
+      MYSQL_PASSWORD: omeka
+    command: --sql-mode=''
+    volumes:
+      - ./dbc:/var/lib/mysql
+
+  db_admin:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+
+  omeka-c:
+    image: vicding81/omekac:latest
+    depends_on:
+      - db
+    ports:
+      - "8080:80"
+    volumes:
+      - ./modulesc/:/var/www/html/modules/
+      - ./themesc/custom/:/var/www/html/themes/custom/
+    restart: unless-stopped
+
+  verhalenbank:
+    image: registry.diginfra.net/verhalenbank_web:1.0.0
+    depends_on:
+      - db
+    ports:
+      - "80:80"
+    volumes:
+      - ./verhalenbank:/var/www/html
